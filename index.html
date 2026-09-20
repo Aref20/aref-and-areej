@@ -1,0 +1,2019 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>قصتنا المباركة | عارف وأريج</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Three.js (WebGL Engine) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <!-- Confetti Engine -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <style>
+    :root {
+      --bg-cream: #FCFAF6;
+      --bg-ivory: #FFFDF9;
+      --gold-primary: #D4AF37;
+      --gold-dark: #A78420;
+      --gold-light: #F4E7B8;
+      --gold-border: rgba(212, 175, 55, 0.45);
+      --gold-glow: rgba(212, 175, 55, 0.25);
+      --text-main: #2C261E;
+      --text-muted: #6E6457;
+      --card-bg: rgba(255, 253, 249, 0.92);
+      --card-border: rgba(212, 175, 55, 0.35);
+      --shadow-warm: 0 16px 40px -8px rgba(110, 84, 25, 0.12), 0 0 1px 1px var(--gold-border);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    html, body {
+      font-family: 'Cairo', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-cream);
+      color: var(--text-main);
+      overflow-x: hidden;
+      scroll-behavior: smooth;
+    }
+
+    /* Fixed WebGL Canvas */
+    #webgl-canvas-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    #webgl-canvas-container.interactive {
+      pointer-events: auto;
+      cursor: grab;
+    }
+    #webgl-canvas-container.interactive:active {
+      cursor: grabbing;
+    }
+
+    /* Top Navigation */
+    .top-nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 70px;
+      padding: 0 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 50;
+      background: linear-gradient(180deg, rgba(253, 250, 246, 0.94) 0%, rgba(253, 250, 246, 0) 100%);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .brand-title {
+      font-family: 'Amiri', serif;
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--gold-dark);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-title .crescent-icon {
+      color: var(--gold-primary);
+      font-size: 1.25rem;
+    }
+
+    .nav-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .pill-btn {
+      background: var(--card-bg);
+      border: 1px solid var(--gold-border);
+      color: var(--gold-dark);
+      padding: 8px 18px;
+      border-radius: 50px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(167, 132, 32, 0.08);
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      user-select: none;
+    }
+
+    .pill-btn:hover {
+      background: #FFFFFF;
+      border-color: var(--gold-primary);
+      box-shadow: 0 6px 16px var(--gold-glow);
+      transform: translateY(-1px);
+    }
+
+    .pill-btn.active {
+      background: var(--gold-primary);
+      color: #FFFFFF;
+      border-color: var(--gold-primary);
+    }
+
+    /* Vertical Timeline Navigation Rail */
+    .timeline-rail {
+      position: fixed;
+      right: 28px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      z-index: 40;
+    }
+
+    .timeline-line-track {
+      position: absolute;
+      top: 10px;
+      bottom: 10px;
+      width: 2px;
+      background: rgba(212, 175, 55, 0.25);
+      z-index: 1;
+    }
+
+    .timeline-line-fill {
+      position: absolute;
+      top: 10px;
+      width: 2px;
+      background: linear-gradient(180deg, var(--gold-primary) 0%, var(--gold-dark) 100%);
+      z-index: 2;
+      height: 0%;
+      transition: height 0.2s ease-out;
+    }
+
+    .rail-dot {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #FFFFFF;
+      border: 2px solid var(--gold-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.62rem;
+      font-weight: 700;
+      color: var(--gold-dark);
+      cursor: pointer;
+      position: relative;
+      z-index: 3;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    .rail-dot:hover, .rail-dot.active {
+      background: var(--gold-primary);
+      color: #FFFFFF;
+      border-color: #FFFFFF;
+      box-shadow: 0 0 10px var(--gold-primary);
+      transform: scale(1.18);
+    }
+
+    .rail-tooltip {
+      position: absolute;
+      right: 34px;
+      white-space: nowrap;
+      background: var(--card-bg);
+      border: 1px solid var(--gold-border);
+      color: var(--text-main);
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateX(-6px);
+      transition: all 0.25s ease;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    .rail-dot:hover .rail-tooltip {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    /* Story Sections & Cards */
+    .story-container {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+    }
+
+    .story-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 80px 8% 80px 10%;
+      pointer-events: none;
+    }
+
+    .hero-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 0 20px;
+      pointer-events: none;
+    }
+
+    .hero-box {
+      pointer-events: auto;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.96) 0%, rgba(253, 250, 246, 0.90) 100%);
+      border: 1px solid var(--gold-border);
+      box-shadow: var(--shadow-warm);
+      padding: 44px 50px;
+      border-radius: 28px;
+      max-width: 680px;
+      backdrop-filter: blur(12px);
+      animation: floatHero 4s ease-in-out infinite alternate;
+    }
+
+    @keyframes floatHero {
+      0% { transform: translateY(0px); }
+      100% { transform: translateY(-8px); }
+    }
+
+    .quran-ayah {
+      font-family: 'Amiri', serif;
+      font-size: 1.25rem;
+      color: var(--gold-dark);
+      margin-bottom: 20px;
+      line-height: 1.8;
+      position: relative;
+      padding: 0 24px;
+    }
+
+    .hero-title {
+      font-family: 'Amiri', serif;
+      font-size: 3.2rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 12px;
+      line-height: 1.3;
+    }
+
+    .hero-title span {
+      color: var(--gold-dark);
+    }
+
+    .hero-subtitle {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      line-height: 1.7;
+      margin-bottom: 28px;
+    }
+
+    .scroll-hint {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--gold-dark);
+      background: rgba(212, 175, 55, 0.12);
+      border: 1px dashed var(--gold-border);
+      padding: 8px 22px;
+      border-radius: 50px;
+      animation: pulseScroll 2s infinite;
+    }
+
+    @keyframes pulseScroll {
+      0%, 100% { transform: translateY(0); opacity: 0.85; }
+      50% { transform: translateY(4px); opacity: 1; }
+    }
+
+    .milestone-card {
+      pointer-events: auto;
+      max-width: 490px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      box-shadow: var(--shadow-warm);
+      border-radius: 24px;
+      padding: 34px 38px;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      opacity: 0.25;
+      transform: translateY(30px) scale(0.97);
+    }
+
+    .story-section.active .milestone-card {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    .card-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: var(--gold-dark);
+      background: rgba(212, 175, 55, 0.14);
+      border: 1px solid var(--gold-border);
+      padding: 4px 12px;
+      border-radius: 20px;
+      margin-bottom: 12px;
+    }
+
+    .card-date {
+      font-family: 'Amiri', serif;
+      font-size: 1.05rem;
+      color: var(--gold-dark);
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .card-title {
+      font-family: 'Amiri', serif;
+      font-size: 2.1rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 14px;
+      line-height: 1.35;
+    }
+
+    .card-desc {
+      font-size: 0.98rem;
+      line-height: 1.8;
+      color: var(--text-muted);
+      margin-bottom: 18px;
+    }
+
+    .card-quote {
+      font-family: 'Amiri', serif;
+      font-style: italic;
+      font-size: 1.05rem;
+      color: var(--gold-dark);
+      border-right: 3px solid var(--gold-primary);
+      padding-right: 14px;
+      line-height: 1.6;
+    }
+
+    .custom-tag {
+      background: linear-gradient(135deg, #FFF9E6 0%, #FFF0C2 100%);
+      border: 1px solid var(--gold-primary);
+      padding: 10px 14px;
+      border-radius: 12px;
+      margin-top: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+      color: #7D6112;
+      font-weight: 700;
+    }
+
+    /* Finale Section */
+    .finale-section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px 20px 120px;
+    }
+
+    .finale-card {
+      pointer-events: auto;
+      max-width: 680px;
+      background: radial-gradient(circle at 50% 30%, rgba(255, 255, 255, 0.98) 0%, rgba(253, 248, 240, 0.92) 100%);
+      border: 1.5px solid var(--gold-primary);
+      box-shadow: 0 20px 50px rgba(180, 140, 30, 0.2), 0 0 25px var(--gold-glow);
+      border-radius: 32px;
+      padding: 50px 45px;
+      backdrop-filter: blur(16px);
+    }
+
+    .finale-title {
+      font-family: 'Amiri', serif;
+      font-size: 2.8rem;
+      color: var(--gold-dark);
+      margin-bottom: 16px;
+      line-height: 1.3;
+    }
+
+    .finale-desc {
+      font-size: 1.1rem;
+      line-height: 1.85;
+      color: var(--text-muted);
+      margin-bottom: 32px;
+    }
+
+    .promise-btn {
+      background: linear-gradient(135deg, var(--gold-primary) 0%, var(--gold-dark) 100%);
+      color: #FFFFFF;
+      border: none;
+      padding: 16px 42px;
+      border-radius: 50px;
+      font-size: 1.2rem;
+      font-family: 'Amiri', serif;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 8px 24px rgba(167, 132, 32, 0.35);
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .promise-btn:hover {
+      transform: scale(1.05) translateY(-2px);
+      box-shadow: 0 12px 30px rgba(167, 132, 32, 0.5);
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(44, 38, 30, 0.5);
+      backdrop-filter: blur(6px);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s ease;
+      padding: 20px;
+    }
+
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-content {
+      background: #FFFDF9;
+      border: 1px solid var(--gold-border);
+      box-shadow: var(--shadow-warm);
+      border-radius: 24px;
+      width: 100%;
+      max-width: 500px;
+      padding: 36px;
+      transform: scale(0.92);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .modal-overlay.open .modal-content {
+      transform: scale(1);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+      padding-bottom: 12px;
+    }
+
+    .modal-header h3 {
+      font-family: 'Amiri', serif;
+      font-size: 1.6rem;
+      color: var(--gold-dark);
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 1.4rem;
+      cursor: pointer;
+      color: var(--text-muted);
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 6px;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid rgba(212, 175, 55, 0.4);
+      background: #FFFFFF;
+      border-radius: 10px;
+      font-family: 'Cairo', sans-serif;
+      font-size: 0.95rem;
+      color: var(--text-main);
+      outline: none;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    /* Loader Screen */
+    #loader-screen {
+      position: fixed;
+      inset: 0;
+      background: #FAF8F5;
+      z-index: 200;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.6s ease, visibility 0.6s ease;
+    }
+
+    #loader-screen.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .loader-crescent {
+      font-size: 3.2rem;
+      color: var(--gold-primary);
+      margin-bottom: 16px;
+      animation: spinCrescent 2.5s infinite ease-in-out;
+    }
+
+    @keyframes spinCrescent {
+      0% { transform: rotate(0deg) scale(0.9); }
+      50% { transform: rotate(180deg) scale(1.1); }
+      100% { transform: rotate(360deg) scale(0.9); }
+    }
+
+    .loader-text {
+      font-family: 'Amiri', serif;
+      font-size: 1.5rem;
+      color: var(--gold-dark);
+      font-weight: 700;
+    }
+
+    @media (max-width: 900px) {
+      .story-section {
+        padding: 60px 24px 60px 40px;
+        justify-content: center;
+      }
+      .milestone-card {
+        max-width: 100%;
+        padding: 24px 20px;
+      }
+      .timeline-rail {
+        right: 8px;
+        gap: 6px;
+      }
+      .rail-dot {
+        width: 20px;
+        height: 20px;
+        font-size: 0.58rem;
+      }
+      .hero-title {
+        font-size: 2.2rem;
+      }
+      .top-nav {
+        padding: 0 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Loading Screen -->
+  <div id="loader-screen">
+    <div class="loader-crescent">🌙</div>
+    <div class="loader-text">بسم الله نبدأ حكايتنا المباركة...</div>
+  </div>
+
+  <!-- 3D WebGL Canvas -->
+  <div id="webgl-canvas-container"></div>
+
+  <!-- Top Navigation -->
+  <header class="top-nav">
+    <div class="brand-title">
+      <span class="crescent-icon">🌙</span>
+      <span id="nav-brand-text">عارف & أريج</span>
+    </div>
+
+    <div class="nav-controls">
+      <button class="pill-btn" id="audio-btn" title="الموسيقى الهادئة">
+        <span id="audio-icon">♫</span>
+        <span id="audio-text">تشغيل النغم</span>
+      </button>
+      <button class="pill-btn" id="inspect-btn" title="استكشاف العالم ثلاثي الأبعاد">
+        <span>🔄</span>
+        <span>استكشاف 3D</span>
+      </button>
+      <button class="pill-btn" id="customize-btn" title="تخصيص الأسماء">
+        <span>⚙️</span>
+        <span>تخصيص</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Vertical Timeline Rail -->
+  <nav class="timeline-rail" aria-label="شريط مراحل القصة">
+    <div class="timeline-line-track"></div>
+    <div class="timeline-line-fill" id="timeline-fill"></div>
+  </nav>
+
+  <!-- Scroll Story Milestones -->
+  <main class="story-container" id="story-container">
+
+    <!-- 0. Hero Section -->
+    <section class="hero-section" id="milestone-0">
+      <div class="hero-box">
+        <div class="quran-ayah">وَمِنْ آيَاتِهِ أَنْ خَلَقَ لَكُم مِّنْ أَنفُسِكُمْ أَزْوَاجًا لِّتَسْكُنُوا إِلَيْهَا وَجَعَلَ بَيْنَكُم مَّوَدَّةً وَرَحْمَةً</div>
+        <h1 class="hero-title"><span id="hero-groom">عارف</span> و <span id="hero-bride">أريج</span></h1>
+        <p class="hero-subtitle">حكاية بدأت بحسن ظن وتضرع إلى الله، ومضت على سنة الله ورسوله خطوة بخطوة من أول لقاء وحتى بناء بيتنا المبارك.</p>
+        <div class="scroll-hint">
+          <span>مرر للأسفل لبدء الرحلة</span>
+          <span>↓</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 1. The Beginning: Walking Alone in Prayer -->
+    <section class="story-section" id="milestone-1">
+      <div class="milestone-card">
+        <div class="card-badge">المحطة ٠١</div>
+        <div class="card-date">البداية المباركة</div>
+        <h2 class="card-title">خطوات السعي وصادق الدعاء</h2>
+        <p class="card-desc">كان عارف يسير في دروب الحياة ساعياً في دراسته وعمله، قلبه مطمئنٌ بتدبير الله، يرفع يديه في كل سجدة أن يرزقه الله الزوجة الصالحة النقية التي تؤنس روحه وتشاركه طاعة الله ومسيرة العمر.</p>
+        <div class="card-quote">«رَبِّ إِنِّي لِمَا أَنزَلْتَ إِلَيَّ مِنْ خَيْرٍ فَقِيرٌ»</div>
+      </div>
+    </section>
+
+    <!-- 2. First Date: August 22, 2026 (The Majlis & Two Sofas with Mothers) -->
+    <section class="story-section" id="milestone-2">
+      <div class="milestone-card">
+        <div class="card-badge">المحطة ٠٢ • الرؤية الشرعية الأولى</div>
+        <div class="card-date">٢٢ أغسطس ٢٠٢٦</div>
+        <h2 class="card-title">اللقاء الأول ومجلس العائلتين</h2>
+        <p class="card-desc">في أجواء يملؤها الحياء والوقار، اجتمع الشمل لأول مرة. جلس عارف بجوار والدته الحبيبة على أريكة، وجلست أريج بحجابها الأبيض الوقور بجوار والدتها الفاضلة على الأريكة المقابلة حول دلة القهوة العربية وطيب العود، حيث حل القبول والارتياح والسكينة في القلوب.</p>
+        <div class="custom-tag">
+          <span>☕</span>
+          <span>مجلس يجمع عارف وأمه، وأريج وأمها في رحاب المودة</span>
+        </div>
+        <div class="card-quote" style="margin-top:14px;">«فإنه أحرى أن يؤدم بينهما» — نظرة أولى أنارت الدرب.</div>
+      </div>
+    </section>
+
+    <!-- 3. Second Date: August 23, 2026 (Second Meeting on Sofas) -->
+    <section class="story-section" id="milestone-3">
+      <div class="milestone-card">
+        <div class="card-badge">المحطة ٠٣ • مجلس الارتياح</div>
+        <div class="card-date">٢٣ أغسطس ٢٠٢٦</div>
+        <h2 class="card-title">اللقاء الثاني وتأكيد الارتياح</h2>
+        <p class="card-desc">تجدد اللقاء في اليوم التالي في مجلس هادئ على الأرائك لترسيخ الارتياح والسكينة بين الطرفين. جلس عارف وأريج على الأرائك المتقابلة بكل وقار، ودارت الأحاديث بوضوح وشفافية حول المستقبل والمبادئ المشتركة، فاستقر في القلب اطمئنان عميق بأن هذا الدرب هو درب الخير والبركة.</p>
+        <div class="custom-tag">
+          <span>🛋️</span>
+          <span>مجلس الأرائك للقاء الثاني وتأكيد الارتياح والسكينة</span>
+        </div>
+        <div class="card-quote" style="margin-top:14px;">«القلوب جنود مجندة، فما تعارف منها ائتلف»</div>
+      </div>
+    </section>
+
+    <!-- 4. Areej Approves: August 25, 2026 (Aref Rejoices in Prayer) -->
+    <section class="story-section" id="milestone-4">
+      <div class="milestone-card">
+        <div class="card-badge">المحطة ٠٤ • بشارة الخير</div>
+        <div class="card-date">٢٥ أغسطس ٢٠٢٦</div>
+        <h2 class="card-title">موافقة أريج والقبول المبارك</h2>
+        <p class="card-desc">في هذا اليوم الطيب جاءت البشارة برضا أريج وموافقتها المباركة بعد صلاة الاستخارة والاطمئنان، فامتلأ قلب عارف حمداً لله تعالى على تيسير الخطى وانشراح الصدور استعداداً لخطوة المباركة القادمة، مكملاً طريقه بالحمد والشكر.</p>
+        <div class="custom-tag">
+          <span>🤍</span>
+          <span>تمت الموافقة بحمد الله وانشرحت الصدور لإتمام الأمر</span>
+        </div>
+        <div class="card-quote" style="margin-top:14px;">«الحمد لله الذي بنعمته تتم الصالحات»</div>
+      </div>
+    </section>
+
+    <!-- 5. Reading Al-Fatihah on Sofas: Late August 2026 -->
+    <section class="story-section" id="milestone-5">
+      <div class="milestone-card">
+        <div class="card-badge">المحطة ٠٥ • مجلس الفاتحة</div>
+        <div class="card-date">أواخر أغسطس ٢٠٢٦</div>
+        <h2 class="card-title">قراءة الفاتحة واجتماع العائلتين</h2>
+        <p class="card-desc">في بيت أريج المبارك، اجتمعت العائلتان الكريمتان في مجلس تغشاه السكينة والوقار. جلس الأهل على الأرائك، وجلس عارف على أريكته المفردة، وارتفعت الأكف بالدعاء خاشعة، وقُرئت الفاتحة بقلوب مطمئنة على نية التوفيق والبركة ودوام المودة والخير.</p>
+        <div class="custom-tag">
+          <span>🤲</span>
+          <span>عارف والأهل على الأرائك يرفعون الأكف بالدعاء وقراءة الفاتحة</span>
+        </div>
+        <div class="card-quote" style="margin-top:14px;">«اللهم بارك هذا الجمع واجعله عهداً مباركاً على طاعتك ورضاك»</div>
+      </div>
+    </section>
+
+    <!-- 6. Communication Period Without Katb Kitab: Until Oct 1, 2026 -->
+    <section class="story-section" id="milestone-6">
+      <div class="milestone-card">
+        <div class="card-badge">المحطة ٠٦ • فترة الانتظار والترقب</div>
+        <div class="card-date">من أواخر أغسطس وحتى ١ أكتوبر ٢٠٢٦</div>
+        <h2 class="card-title">فترة التعارف والتواصل بالمعروف</h2>
+        <p class="card-desc">مضت هذه الفترة بالتواصل الهادف والتفاهم المنضبط بالمعروف دون كتب كتاب، حيث كان عارف يسير في طريقه وحيداً عاقداً العزم، يعد الخطوات بالدعاء والاستعداد التام لليوم الموعود.</p>
+        <div class="card-quote">«تواصل بالمعروف وترقب ليوم العقد الشريف»</div>
+      </div>
+    </section>
+
+    <!-- 7. Katb Al-Kitab & Khitbah Festival: October 1, 2026 -->
+    <section class="story-section" id="milestone-7">
+      <div class="milestone-card">
+        <div class="card-badge">المحطة ٠٧ • المهرجان الكبير</div>
+        <div class="card-date">١ أكتوبر ٢٠٢٦</div>
+        <h2 class="card-title">مهرجان كتب الكتاب وحفلة الخطوبة</h2>
+        <p class="card-desc">في يوم مشهود احتفل الأهل والأحباب بمهرجان عظيم يملؤه النور والزغاريد. حضر المأذون والشهود، ووُضع دفتر العقد الشريف، وعُقد القران والميثاق الغليظ؛ وهنا تجتمع أريج بعارف رسميّاً على منصة الفرح وسط تبريكات وتصفيق جموع المهنئين لينطلقا معاً يداً بيد!</p>
+        <div class="custom-tag">
+          <span>🎉</span>
+          <span>حفل كتب الكتاب والخطوبة بحضور حشد كبير من الأهل والأصدقاء</span>
+        </div>
+        <div class="card-quote" style="margin-top:14px;">«بَارَكَ اللَّهُ لَكُمَا وَبَارَكَ عَلَيْكُمَا وَجَمَعَ بَيْنَكُمَا فِي خَيْرٍ»</div>
+      </div>
+    </section>
+
+    <!-- 8. Blessed Wedding & Cozy Home -->
+    <section class="story-section" id="milestone-8">
+      <div class="milestone-card">
+        <div class="card-badge">المحطة ٠٨</div>
+        <div class="card-date">العرس الميمون</div>
+        <h2 class="card-title">العرس وتأسيس بيتنا الصالح</h2>
+        <p class="card-desc">أريج بحجابها الأبيض الوضاء وإكليلها الذهبي، وعارف ببدلته الأنيقة، ينطلقان يداً بيد تحت أقواس الياسمين نحو بيتهما الصالح الذي أُسس على التقوى ورضا الرحمن وحسن العشرة.</p>
+        <div class="card-quote">«وعلى كتاب الله وسنة رسوله نلتقي ونبني حياتنا»</div>
+      </div>
+    </section>
+
+    <!-- 9. The Children: Karam & Yasmine -->
+    <section class="story-section" id="milestone-9">
+      <div class="milestone-card">
+        <div class="card-badge">المحطة ٠٩ • قرة العين</div>
+        <div class="card-date">ثمرة المودة والرحمة</div>
+        <h2 class="card-title">اكتمال الفرحة مع (كرم) و(ياسمين)</h2>
+        <p class="card-desc">أكرمنا الله بطفلنا الحبيب "كرم" لتفيض بضحكاته البركة، ثم جاءت أميرتنا الصغيرة "ياسمين" بحجابها الطفولي الجميل لتملأ أرجاء البيت عطراً وبهجة لا تنتهي.</p>
+        <div class="card-quote">«الْمَالُ وَالْبَنُونَ زِينَةُ الْحَيَاةِ الدُّنْيَا»</div>
+      </div>
+    </section>
+
+    <!-- 10. Finale Section -->
+    <section class="story-section finale-section" id="milestone-10">
+      <div class="finale-card">
+        <div class="card-badge">العهد الدائم</div>
+        <h2 class="finale-title">مسيرتنا مستمرة بإذن الله</h2>
+        <p class="finale-desc">من نظرة الرؤية الشرعية العفيفة، إلى بركة مجلس الفاتحة ودعاء الأهل، ثم بهجة مهرجان كتب الكتاب وحفلة الخطوبة في أول أكتوبر، وحتى بناء عائلتنا الصالحة؛ ما زال عهدنا صادقاً، نسير معاً نحو رضا الله وجنته.</p>
+        
+        <button class="promise-btn" id="promise-action-btn">
+          <span>نعم، معاً إلى الجنة إن شاء الله</span>
+          <span>❤️ 🌙</span>
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Customization Modal -->
+  <div class="modal-overlay" id="customize-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>تخصيص أسماء العائلة</h3>
+        <button class="close-btn" id="close-modal-btn">✕</button>
+      </div>
+      <div class="form-group">
+        <label for="input-groom">اسم الزوج (العريس)</label>
+        <input type="text" id="input-groom" value="عارف">
+      </div>
+      <div class="form-group">
+        <label for="input-bride">اسم الزوجة (العروس)</label>
+        <input type="text" id="input-bride" value="أريج">
+      </div>
+      <div class="form-group">
+        <label for="input-child1">اسم الطفل الأول</label>
+        <input type="text" id="input-child1" value="كرم">
+      </div>
+      <div class="form-group">
+        <label for="input-child2">اسم الطفل الثاني</label>
+        <input type="text" id="input-child2" value="ياسمين">
+      </div>
+      <div class="modal-actions">
+        <button class="pill-btn" id="cancel-modal-btn">إلغاء</button>
+        <button class="pill-btn active" id="save-modal-btn">حفظ وتطبيق</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* =========================================================================
+       1. DATA STRUCTURE & TIMELINE CONFIGURATION
+       ========================================================================= */
+    const STORY_DATA = {
+      groom: "عارف",
+      bride: "أريج",
+      child1: "كرم",
+      child2: "ياسمين",
+      milestones: [
+        { id: 0, title: "البداية" },
+        { id: 1, title: "صادق الدعاء" },
+        { id: 2, title: "الرؤية الأولى (٢٢ آب)" },
+        { id: 3, title: "اللقاء الثاني والأريكة (٢٣ آب)" },
+        { id: 4, title: "موافقة أريج (٢٥ آب)" },
+        { id: 5, title: "مجلس الفاتحة" },
+        { id: 6, title: "فترة التواصل" },
+        { id: 7, title: "كتب الكتاب (١ تشرين)" },
+        { id: 8, title: "العرس والبيت" },
+        { id: 9, title: "كرم وياسمين" },
+        { id: 10, title: "إلى الجنة معاً" }
+      ]
+    };
+
+    const container = document.getElementById('webgl-canvas-container');
+    const timelineFill = document.getElementById('timeline-fill');
+    const timelineRail = document.querySelector('.timeline-rail');
+    const storySections = document.querySelectorAll('.story-section, .hero-section');
+    const loaderScreen = document.getElementById('loader-screen');
+    const inspectBtn = document.getElementById('inspect-btn');
+    const audioBtn = document.getElementById('audio-btn');
+    const audioText = document.getElementById('audio-text');
+    const customizeBtn = document.getElementById('customize-btn');
+    const customizeModal = document.getElementById('customize-modal');
+    const closeModalBtn = document.getElementById('close-modal-btn');
+    const cancelModalBtn = document.getElementById('cancel-modal-btn');
+    const saveModalBtn = document.getElementById('save-modal-btn');
+    const promiseActionBtn = document.getElementById('promise-action-btn');
+
+    // Build timeline rail items
+    STORY_DATA.milestones.forEach((m, idx) => {
+      const dot = document.createElement('div');
+      dot.className = `rail-dot ${idx === 0 ? 'active' : ''}`;
+      dot.setAttribute('data-index', idx);
+      dot.innerHTML = `
+        ${idx === 0 ? '✦' : idx}
+        <span class="rail-tooltip">${m.title}</span>
+      `;
+      dot.addEventListener('click', () => {
+        const target = document.getElementById(`milestone-${idx}`);
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth' });
+        }
+      });
+      timelineRail.appendChild(dot);
+    });
+
+    /* =========================================================================
+       2. THREE.JS 3D SCENE & ENGINE SETUP
+       ========================================================================= */
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xFDFBF7);
+    scene.fog = new THREE.FogExp2(0xFDFBF7, 0.011);
+
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 10, 26);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    container.appendChild(renderer.domElement);
+
+    // Lights
+    const ambientLight = new THREE.AmbientLight(0xFFF9EE, 0.88);
+    scene.add(ambientLight);
+
+    const sunLight = new THREE.DirectionalLight(0xFFE8C2, 1.28);
+    sunLight.position.set(40, 60, 30);
+    sunLight.castShadow = true;
+    sunLight.shadow.mapSize.width = 2048;
+    sunLight.shadow.mapSize.height = 2048;
+    sunLight.shadow.camera.near = 0.5;
+    sunLight.shadow.camera.far = 180;
+    const shadowD = 50;
+    sunLight.shadow.camera.left = -shadowD;
+    sunLight.shadow.camera.right = shadowD;
+    sunLight.shadow.camera.top = shadowD;
+    sunLight.shadow.camera.bottom = -shadowD;
+    scene.add(sunLight);
+
+    const warmFill = new THREE.PointLight(0xD4AF37, 0.65, 60);
+    warmFill.position.set(0, 8, 10);
+    scene.add(warmFill);
+
+    // Palette & Shared Materials
+    const PALETTE = {
+      white: 0xFFFFFF,
+      pearlIvory: 0xF7F4EE,
+      gold: 0xD4AF37,
+      goldDark: 0x9A7718,
+      skin: 0xF2CEB6,
+      darkHair: 0x2A241F,
+      suitNavy: 0x242A38,
+      hijabWhite: 0xFFFFFF,
+      hijabEmerald: 0x2C5E43,
+      hijabPlum: 0x612D3C,
+      abayaWhite: 0xFDFBF7,
+      abayaEmerald: 0x1E4631,
+      abayaPlum: 0x4D1F2D,
+      woodSofa: 0x7A4F26,
+      cushionCream: 0xF4EFE6,
+      carpetRed: 0x98282A,
+      carpetTeal: 0x28595B,
+      grassSoft: 0x7E9968,
+      pathStone: 0xE8DFD1
+    };
+
+    const MAT = {};
+    for (let k in PALETTE) {
+      MAT[k] = new THREE.MeshLambertMaterial({ color: PALETTE[k] });
+    }
+    MAT.goldShine = new THREE.MeshStandardMaterial({
+      color: PALETTE.gold,
+      roughness: 0.3,
+      metalness: 0.75
+    });
+
+    function createBox(w, h, d, mat, castShadow = true) {
+      const geo = new THREE.BoxGeometry(w, h, d);
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.castShadow = castShadow;
+      mesh.receiveShadow = true;
+      return mesh;
+    }
+
+    /* -------------------------------------------------------------
+       CHARACTER BUILDERS
+       ------------------------------------------------------------- */
+    function buildGroom() {
+      const group = new THREE.Group();
+
+      const head = createBox(0.9, 0.9, 0.9, MAT.skin);
+      head.position.y = 2.45;
+      group.add(head);
+
+      const hair = createBox(0.96, 0.35, 0.96, MAT.darkHair);
+      hair.position.set(0, 2.82, 0);
+      group.add(hair);
+
+      const beard = createBox(0.92, 0.3, 0.45, MAT.darkHair);
+      beard.position.set(0, 2.15, 0.28);
+      group.add(beard);
+
+      const eyeMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
+      const leftEye = createBox(0.12, 0.12, 0.05, eyeMat);
+      leftEye.position.set(-0.22, 2.45, 0.46);
+      const rightEye = createBox(0.12, 0.12, 0.05, eyeMat);
+      rightEye.position.set(0.22, 2.45, 0.46);
+      group.add(leftEye, rightEye);
+
+      const torso = createBox(1.1, 1.25, 0.7, MAT.suitNavy);
+      torso.position.y = 1.45;
+      group.add(torso);
+
+      const collar = createBox(0.3, 0.35, 0.05, MAT.white);
+      collar.position.set(0, 1.85, 0.36);
+      const rose = createBox(0.12, 0.12, 0.1, MAT.goldShine);
+      rose.position.set(-0.35, 1.75, 0.36);
+      group.add(collar, rose);
+
+      const leftArmPivot = new THREE.Group();
+      leftArmPivot.position.set(-0.7, 1.9, 0);
+      const leftArm = createBox(0.32, 1.05, 0.35, MAT.suitNavy);
+      leftArm.position.y = -0.52;
+      leftArmPivot.add(leftArm);
+      group.add(leftArmPivot);
+
+      const rightArmPivot = new THREE.Group();
+      rightArmPivot.position.set(0.7, 1.9, 0);
+      const rightArm = createBox(0.32, 1.05, 0.35, MAT.suitNavy);
+      rightArm.position.y = -0.52;
+      rightArmPivot.add(rightArm);
+      group.add(rightArmPivot);
+
+      const leftLegPivot = new THREE.Group();
+      leftLegPivot.position.set(-0.28, 0.85, 0);
+      const leftLeg = createBox(0.38, 0.9, 0.4, MAT.suitNavy);
+      leftLeg.position.y = -0.45;
+      leftLegPivot.add(leftLeg);
+      group.add(leftLegPivot);
+
+      const rightLegPivot = new THREE.Group();
+      rightLegPivot.position.set(0.28, 0.85, 0);
+      const rightLeg = createBox(0.38, 0.9, 0.4, MAT.suitNavy);
+      rightLeg.position.y = -0.45;
+      rightLegPivot.add(rightLeg);
+      group.add(rightLegPivot);
+
+      return { group, head, leftArmPivot, rightArmPivot, leftLegPivot, rightLegPivot };
+    }
+
+    function buildWoman(hijabMat, abayaMat, hasTiara = false) {
+      const group = new THREE.Group();
+
+      const face = createBox(0.76, 0.76, 0.72, MAT.skin);
+      face.position.y = 2.42;
+      group.add(face);
+
+      const eyeMat = new THREE.MeshBasicMaterial({ color: 0x1F1A17 });
+      const leftEye = createBox(0.1, 0.1, 0.05, eyeMat);
+      leftEye.position.set(-0.2, 2.42, 0.37);
+      const rightEye = createBox(0.1, 0.1, 0.05, eyeMat);
+      rightEye.position.set(0.2, 2.42, 0.37);
+      group.add(leftEye, rightEye);
+
+      // Voxel Hijab
+      const hijabTop = createBox(0.94, 0.42, 0.94, hijabMat);
+      hijabTop.position.set(0, 2.76, 0);
+      const hijabBack = createBox(0.94, 0.95, 0.3, hijabMat);
+      hijabBack.position.set(0, 2.38, -0.36);
+      const hijabLeft = createBox(0.22, 0.88, 0.9, hijabMat);
+      hijabLeft.position.set(-0.4, 2.38, 0);
+      const hijabRight = createBox(0.22, 0.88, 0.9, hijabMat);
+      hijabRight.position.set(0.4, 2.38, 0);
+      const hijabChin = createBox(0.8, 0.28, 0.4, hijabMat);
+      hijabChin.position.set(0, 2.05, 0.25);
+      const hijabDrape = createBox(0.96, 0.55, 0.7, hijabMat);
+      hijabDrape.position.set(0, 1.82, 0.05);
+      group.add(hijabTop, hijabBack, hijabLeft, hijabRight, hijabChin, hijabDrape);
+
+      if (hasTiara) {
+        const tiara = createBox(0.65, 0.15, 0.12, MAT.goldShine);
+        tiara.position.set(0, 2.92, 0.4);
+        group.add(tiara);
+      }
+
+      const abaya = createBox(1.05, 1.45, 0.75, abayaMat);
+      abaya.position.y = 1.35;
+      group.add(abaya);
+
+      const skirt = createBox(1.15, 0.65, 0.85, abayaMat);
+      skirt.position.y = 0.32;
+      group.add(skirt);
+
+      const leftArmPivot = new THREE.Group();
+      leftArmPivot.position.set(-0.66, 1.85, 0);
+      const leftArm = createBox(0.28, 0.95, 0.3, abayaMat);
+      leftArm.position.y = -0.48;
+      leftArmPivot.add(leftArm);
+      group.add(leftArmPivot);
+
+      const rightArmPivot = new THREE.Group();
+      rightArmPivot.position.set(0.66, 1.85, 0);
+      const rightArm = createBox(0.28, 0.95, 0.3, abayaMat);
+      rightArm.position.y = -0.48;
+      rightArmPivot.add(rightArm);
+      group.add(rightArmPivot);
+
+      const leftLegPivot = new THREE.Group();
+      leftLegPivot.position.set(-0.25, 0.7, 0);
+      const leftLeg = createBox(0.3, 0.7, 0.3, MAT.skin);
+      leftLeg.position.y = -0.35;
+      leftLegPivot.add(leftLeg);
+      group.add(leftLegPivot);
+
+      const rightLegPivot = new THREE.Group();
+      rightLegPivot.position.set(0.25, 0.7, 0);
+      const rightLeg = createBox(0.3, 0.7, 0.3, MAT.skin);
+      rightLeg.position.y = -0.35;
+      rightLegPivot.add(rightLeg);
+      group.add(rightLegPivot);
+
+      return { group, face, leftArmPivot, rightArmPivot, leftLegPivot, rightLegPivot };
+    }
+
+    // Builder for seated family members raising hands in Fatihah prayer (يقرأون الفاتحة)
+    function createPrayingPerson(isMale = true, outfitColor = 0x334455, isFemaleMother = false) {
+      const group = new THREE.Group();
+      const personMat = new THREE.MeshLambertMaterial({ color: outfitColor });
+
+      const head = createBox(0.68, 0.68, 0.68, MAT.skin);
+      head.position.y = 2.15;
+      group.add(head);
+
+      if (isMale) {
+        const cover = createBox(0.74, 0.22, 0.74, MAT.white);
+        cover.position.y = 2.45;
+        const egal = createBox(0.78, 0.08, 0.78, MAT.darkHair);
+        egal.position.y = 2.40;
+        group.add(cover, egal);
+      } else {
+        const hijab = createBox(0.82, 0.5, 0.82, isFemaleMother ? MAT.cushionCream : MAT.hijabWhite);
+        hijab.position.y = 2.35;
+        group.add(hijab);
+      }
+
+      const body = createBox(0.95, 1.25, 0.65, personMat);
+      body.position.y = 1.35;
+      group.add(body);
+
+      const thighs = createBox(0.9, 0.35, 0.9, personMat);
+      thighs.position.set(0, 0.85, 0.35);
+      const calves = createBox(0.85, 0.7, 0.35, personMat);
+      calves.position.set(0, 0.45, 0.75);
+      group.add(thighs, calves);
+
+      // Arms in Dua / Fatihah pose
+      const leftArmPivot = new THREE.Group();
+      leftArmPivot.position.set(-0.52, 1.65, 0.1);
+      const laUpper = createBox(0.24, 0.55, 0.24, personMat);
+      laUpper.position.set(0, -0.2, 0.1);
+      laUpper.rotation.x = -0.8;
+      const laHand = createBox(0.22, 0.22, 0.28, MAT.skin);
+      laHand.position.set(0.12, 0.05, 0.45);
+      leftArmPivot.add(laUpper, laHand);
+      group.add(leftArmPivot);
+
+      const rightArmPivot = new THREE.Group();
+      rightArmPivot.position.set(0.52, 1.65, 0.1);
+      const raUpper = createBox(0.24, 0.55, 0.24, personMat);
+      raUpper.position.set(0, -0.2, 0.1);
+      raUpper.rotation.x = -0.8;
+      const raHand = createBox(0.22, 0.22, 0.28, MAT.skin);
+      raHand.position.set(-0.12, 0.05, 0.45);
+      rightArmPivot.add(raUpper, raHand);
+      group.add(rightArmPivot);
+
+      return { group, leftArmPivot, rightArmPivot };
+    }
+
+    function buildChild(isBoy = true) {
+      const group = new THREE.Group();
+      const scale = 0.62;
+      group.scale.set(scale, scale, scale);
+
+      const head = createBox(0.8, 0.8, 0.8, MAT.skin);
+      head.position.y = 2.2;
+      group.add(head);
+
+      if (isBoy) {
+        const hair = createBox(0.85, 0.3, 0.85, MAT.darkHair);
+        hair.position.set(0, 2.55, 0);
+        group.add(hair);
+      } else {
+        const girlHijab = createBox(0.9, 0.5, 0.9, MAT.hijabPlum);
+        girlHijab.position.set(0, 2.5, 0);
+        const girlDrape = createBox(0.85, 0.4, 0.6, MAT.hijabPlum);
+        girlDrape.position.set(0, 1.85, 0);
+        group.add(girlHijab, girlDrape);
+      }
+
+      const eyeMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
+      const le = createBox(0.1, 0.1, 0.05, eyeMat);
+      le.position.set(-0.2, 2.2, 0.41);
+      const re = createBox(0.1, 0.1, 0.05, eyeMat);
+      re.position.set(0.2, 2.2, 0.41);
+      group.add(le, re);
+
+      const bodyMat = isBoy ? MAT.suitNavy : MAT.abayaPlum;
+      const body = createBox(0.9, 1.1, 0.6, bodyMat);
+      body.position.y = 1.3;
+      group.add(body);
+
+      const leftArmPivot = new THREE.Group();
+      leftArmPivot.position.set(-0.55, 1.7, 0);
+      const la = createBox(0.25, 0.8, 0.25, bodyMat);
+      la.position.y = -0.4;
+      leftArmPivot.add(la);
+      group.add(leftArmPivot);
+
+      const rightArmPivot = new THREE.Group();
+      rightArmPivot.position.set(0.55, 1.7, 0);
+      const ra = createBox(0.25, 0.8, 0.25, bodyMat);
+      ra.position.y = -0.4;
+      rightArmPivot.add(ra);
+      group.add(rightArmPivot);
+
+      const leftLegPivot = new THREE.Group();
+      leftLegPivot.position.set(-0.22, 0.7, 0);
+      const ll = createBox(0.28, 0.7, 0.28, bodyMat);
+      ll.position.y = -0.35;
+      leftLegPivot.add(ll);
+      group.add(leftLegPivot);
+
+      const rightLegPivot = new THREE.Group();
+      rightLegPivot.position.set(0.22, 0.7, 0);
+      const rl = createBox(0.28, 0.7, 0.28, bodyMat);
+      rl.position.y = -0.35;
+      rightLegPivot.add(rl);
+      group.add(rightLegPivot);
+
+      return { group, leftArmPivot, rightArmPivot, leftLegPivot, rightLegPivot };
+    }
+
+    // FIXED: createVoxelGuest now consistently defines and uses `group`
+    function createVoxelGuest(isMale = true, colorHex = 0x334455) {
+      const group = new THREE.Group();
+      const guestMat = new THREE.MeshLambertMaterial({ color: colorHex });
+
+      const head = createBox(0.7, 0.7, 0.7, MAT.skin);
+      head.position.y = 2.2;
+      group.add(head);
+
+      if (isMale) {
+        const headCover = createBox(0.76, 0.25, 0.76, MAT.white);
+        headCover.position.y = 2.5;
+        const egal = createBox(0.8, 0.08, 0.8, MAT.darkHair);
+        egal.position.y = 2.45;
+        group.add(headCover, egal);
+      } else {
+        const hijab = createBox(0.82, 0.5, 0.82, MAT.cushionCream);
+        hijab.position.y = 2.4;
+        group.add(hijab);
+      }
+
+      const body = createBox(0.9, 1.3, 0.6, guestMat);
+      body.position.y = 1.3;
+      group.add(body);
+
+      const leftArmPivot = new THREE.Group();
+      leftArmPivot.position.set(-0.55, 1.8, 0);
+      const la = createBox(0.25, 0.9, 0.25, guestMat);
+      la.position.y = -0.45;
+      leftArmPivot.add(la);
+      group.add(leftArmPivot);
+
+      const rightArmPivot = new THREE.Group();
+      rightArmPivot.position.set(0.55, 1.8, 0);
+      const ra = createBox(0.25, 0.9, 0.25, guestMat);
+      ra.position.y = -0.45;
+      rightArmPivot.add(ra);
+      group.add(rightArmPivot);
+
+      const legs = createBox(0.8, 0.7, 0.5, isMale ? guestMat : MAT.darkHair);
+      legs.position.y = 0.35;
+      group.add(legs);
+
+      return {
+        group,
+        leftArmPivot,
+        rightArmPivot,
+        cheerOffset: Math.random() * Math.PI * 2
+      };
+    }
+
+    /* -------------------------------------------------------------
+       INSTANTIATE CHARACTERS
+       ------------------------------------------------------------- */
+    const groomChar = buildGroom();
+    scene.add(groomChar.group);
+
+    const brideChar = buildWoman(MAT.hijabWhite, MAT.abayaWhite, true);
+    scene.add(brideChar.group);
+
+    const motherGroom = buildWoman(MAT.cushionCream, MAT.abayaEmerald, false);
+    scene.add(motherGroom.group);
+
+    const motherBride = buildWoman(MAT.cushionCream, MAT.abayaPlum, false);
+    scene.add(motherBride.group);
+
+    const child1Char = buildChild(true);   // Karam
+    const child2Char = buildChild(false);  // Yasmine
+    scene.add(child1Char.group);
+    scene.add(child2Char.group);
+
+    /* -------------------------------------------------------------
+       SCENE ENVIRONMENT & PROPS
+       ------------------------------------------------------------- */
+    const worldGroup = new THREE.Group();
+    scene.add(worldGroup);
+
+    const groundMesh = createBox(90, 2, 280, MAT.grassSoft);
+    groundMesh.position.set(0, -1, 0);
+    worldGroup.add(groundMesh);
+
+    const pathMesh = createBox(6.5, 0.15, 275, MAT.pathStone);
+    pathMesh.position.set(0, 0.08, 0);
+    worldGroup.add(pathMesh);
+
+    function addCypress(x, z) {
+      const trunk = createBox(0.6, 2, 0.6, MAT.woodSofa);
+      trunk.position.set(x, 1, z);
+      const f1 = createBox(2.2, 4, 2.2, new THREE.MeshLambertMaterial({ color: 0x4A6B41 }));
+      f1.position.set(x, 3.5, z);
+      const f2 = createBox(1.5, 3, 1.5, new THREE.MeshLambertMaterial({ color: 0x5C8052 }));
+      f2.position.set(x, 6, z);
+      worldGroup.add(trunk, f1, f2);
+    }
+
+    for (let z = -120; z <= 120; z += 20) {
+      addCypress(-9 - Math.random() * 4, z + (Math.random() * 6 - 3));
+      addCypress(9 + Math.random() * 4, z + (Math.random() * 6 - 3));
+    }
+
+    // Helper to create luxury voxel sofas & armchairs
+    function createVoxelSofa(width = 3.4) {
+      const sofa = new THREE.Group();
+      const base = createBox(width, 0.45, 1.4, MAT.woodSofa);
+      base.position.y = 0.25;
+      const cushion = createBox(width - 0.2, 0.4, 1.3, MAT.cushionCream);
+      cushion.position.y = 0.6;
+      const back = createBox(width, 1.2, 0.35, MAT.woodSofa);
+      back.position.set(0, 1.2, -0.6);
+      const backCushion = createBox(width - 0.3, 0.9, 0.2, MAT.cushionCream);
+      backCushion.position.set(0, 1.2, -0.45);
+      const goldTrim = createBox(width + 0.05, 0.12, 0.4, MAT.goldShine);
+      goldTrim.position.set(0, 1.85, -0.6);
+      const leftArm = createBox(0.4, 0.8, 1.4, MAT.woodSofa);
+      leftArm.position.set(-width / 2, 0.7, 0);
+      const rightArm = createBox(0.4, 0.8, 1.4, MAT.woodSofa);
+      rightArm.position.set(width / 2, 0.7, 0);
+      sofa.add(base, cushion, back, backCushion, goldTrim, leftArm, rightArm);
+      return sofa;
+    }
+
+    // 1. First Date Environment: The Majlis (Milestone 2: 22 August 2026)
+    const majlisGroup = new THREE.Group();
+    majlisGroup.position.set(0, 0, 55);
+    worldGroup.add(majlisGroup);
+
+    const majlisCarpet = createBox(11, 0.1, 7.5, MAT.carpetRed);
+    majlisCarpet.position.y = 0.05;
+    const carpetBorder = createBox(11.4, 0.08, 7.9, MAT.goldShine);
+    carpetBorder.position.y = 0.04;
+    majlisGroup.add(majlisCarpet, carpetBorder);
+
+    const sofaGroom = createVoxelSofa(3.4);
+    sofaGroom.position.set(3.2, 0, 0);
+    sofaGroom.rotation.y = -Math.PI / 2;
+    majlisGroup.add(sofaGroom);
+
+    const sofaBride = createVoxelSofa(3.4);
+    sofaBride.position.set(-3.2, 0, 0);
+    sofaBride.rotation.y = Math.PI / 2;
+    majlisGroup.add(sofaBride);
+
+    const tableGroup = new THREE.Group();
+    const tableTop = createBox(2.2, 0.2, 2.2, MAT.woodSofa);
+    tableTop.position.y = 0.75;
+    const tableLeg = createBox(0.6, 0.75, 0.6, MAT.woodSofa);
+    tableLeg.position.y = 0.375;
+    tableGroup.add(tableTop, tableLeg);
+
+    const dallahBase = createBox(0.3, 0.4, 0.3, MAT.goldShine);
+    dallahBase.position.set(0, 1.05, 0);
+    const dallahSpout = createBox(0.1, 0.3, 0.18, MAT.goldShine);
+    dallahSpout.position.set(0, 1.25, 0.15);
+    dallahSpout.rotation.x = 0.35;
+    const dallahLid = createBox(0.2, 0.2, 0.2, MAT.goldShine);
+    dallahLid.position.set(0, 1.35, 0);
+    tableGroup.add(dallahBase, dallahSpout, dallahLid);
+
+    const f1 = createBox(0.12, 0.12, 0.12, MAT.white);
+    f1.position.set(-0.45, 0.9, -0.3);
+    const f2 = createBox(0.12, 0.12, 0.12, MAT.white);
+    f2.position.set(0.45, 0.9, -0.3);
+    const f3 = createBox(0.12, 0.12, 0.12, MAT.white);
+    f3.position.set(-0.45, 0.9, 0.3);
+    const f4 = createBox(0.12, 0.12, 0.12, MAT.white);
+    f4.position.set(0.45, 0.9, 0.3);
+    tableGroup.add(f1, f2, f3, f4);
+
+    const mabkhara = createBox(0.25, 0.35, 0.25, MAT.goldShine);
+    mabkhara.position.set(0, 1.0, -0.6);
+    tableGroup.add(mabkhara);
+    majlisGroup.add(tableGroup);
+
+    // 2. Second Date Environment: Dedicated Sofas (Milestone 3: 23 August 2026)
+    const secondMeetingGroup = new THREE.Group();
+    secondMeetingGroup.position.set(0, 0, 38);
+    worldGroup.add(secondMeetingGroup);
+
+    const secondMeetingCarpet = createBox(10.5, 0.1, 7.0, MAT.carpetTeal);
+    secondMeetingCarpet.position.y = 0.05;
+    const secondMeetingBorder = createBox(10.9, 0.08, 7.4, MAT.goldShine);
+    secondMeetingBorder.position.y = 0.04;
+    secondMeetingGroup.add(secondMeetingCarpet, secondMeetingBorder);
+
+    const sofaSecondAref = createVoxelSofa(2.8);
+    sofaSecondAref.position.set(2.8, 0, 0);
+    sofaSecondAref.rotation.y = -Math.PI / 2;
+    secondMeetingGroup.add(sofaSecondAref);
+
+    const sofaSecondAreej = createVoxelSofa(2.8);
+    sofaSecondAreej.position.set(-2.8, 0, 0);
+    sofaSecondAreej.rotation.y = Math.PI / 2;
+    secondMeetingGroup.add(sofaSecondAreej);
+
+    const secondTable = createBox(1.8, 0.7, 1.8, MAT.woodSofa);
+    secondTable.position.set(0, 0.4, 0);
+    const flowerVase = createBox(0.3, 0.4, 0.3, MAT.white);
+    flowerVase.position.set(0, 0.95, 0);
+    const flowerBlossom = createBox(0.45, 0.35, 0.45, MAT.goldShine);
+    flowerBlossom.position.set(0, 1.3, 0);
+    const teaCup1 = createBox(0.14, 0.12, 0.14, MAT.white);
+    teaCup1.position.set(0.4, 0.82, 0);
+    const teaCup2 = createBox(0.14, 0.12, 0.14, MAT.white);
+    teaCup2.position.set(-0.4, 0.82, 0);
+    secondMeetingGroup.add(secondTable, flowerVase, flowerBlossom, teaCup1, teaCup2);
+
+    // 3. Fatihah Environment: Sofas & AREF'S INDIVIDUAL SOFA (Milestone 5)
+    const fatihahMajlisGroup = new THREE.Group();
+    fatihahMajlisGroup.position.set(0, 0, 5); // Milestone 5
+    worldGroup.add(fatihahMajlisGroup);
+
+    const fatihahCarpet = createBox(14, 0.1, 10, MAT.carpetRed);
+    fatihahCarpet.position.y = 0.05;
+    const fatihahBorder = createBox(14.4, 0.08, 10.4, MAT.goldShine);
+    fatihahBorder.position.y = 0.04;
+    fatihahMajlisGroup.add(fatihahCarpet, fatihahBorder);
+
+    // Sofa 1 (Right): Groom's Parents / Family
+    const fatihahSofaRight = createVoxelSofa(4.6);
+    fatihahSofaRight.position.set(4.4, 0, -0.6);
+    fatihahSofaRight.rotation.y = -Math.PI / 2;
+    fatihahMajlisGroup.add(fatihahSofaRight);
+
+    // Sofa 2 (Left): Bride's Parents / Family
+    const fatihahSofaLeft = createVoxelSofa(4.6);
+    fatihahSofaLeft.position.set(-4.4, 0, 0);
+    fatihahSofaLeft.rotation.y = Math.PI / 2;
+    fatihahMajlisGroup.add(fatihahSofaLeft);
+
+    // Sofa 3: AREF'S DEDICATED INDIVIDUAL SOFA (أريكة عارف المفردة)
+    const fatihahArefSofa = createVoxelSofa(1.9);
+    fatihahArefSofa.position.set(2.4, 0, 2.2);
+    fatihahArefSofa.rotation.y = -Math.PI * 0.65;
+    fatihahMajlisGroup.add(fatihahArefSofa);
+
+    // Center Table with Quran Stand
+    const fatihahTable = createBox(2.8, 0.75, 2.0, MAT.woodSofa);
+    fatihahTable.position.set(0, 0.45, 0);
+    const fatihahQuranStand = createBox(0.7, 0.35, 0.5, MAT.goldShine);
+    fatihahQuranStand.position.set(0, 0.95, 0);
+    const fatihahQuranBook = createBox(0.6, 0.08, 0.42, MAT.white);
+    fatihahQuranBook.position.set(0, 1.15, 0);
+    const fatihahIncense = createBox(0.24, 0.32, 0.24, MAT.goldShine);
+    fatihahIncense.position.set(0.8, 0.95, 0);
+    fatihahMajlisGroup.add(fatihahTable, fatihahQuranStand, fatihahQuranBook, fatihahIncense);
+
+    const fatihahPrayingMembers = [];
+
+    const member1 = createPrayingPerson(true, 0x2A3545); // Groom's Father
+    member1.group.position.set(4.4, 0.25, -1.7);
+    member1.group.rotation.y = -Math.PI / 2;
+    fatihahMajlisGroup.add(member1.group);
+    fatihahPrayingMembers.push(member1);
+
+    const member2 = createPrayingPerson(false, 0x1E4631, true); // Groom's Mother
+    member2.group.position.set(4.4, 0.25, 0.5);
+    member2.group.rotation.y = -Math.PI / 2;
+    fatihahMajlisGroup.add(member2.group);
+    fatihahPrayingMembers.push(member2);
+
+    const member3 = createPrayingPerson(true, 0x3E4E3D); // Bride's Father
+    member3.group.position.set(-4.4, 0.25, -1.1);
+    member3.group.rotation.y = Math.PI / 2;
+    fatihahMajlisGroup.add(member3.group);
+    fatihahPrayingMembers.push(member3);
+
+    const member4 = createPrayingPerson(false, 0x4D1F2D, true); // Bride's Mother
+    member4.group.position.set(-4.4, 0.25, 1.1);
+    member4.group.rotation.y = Math.PI / 2;
+    fatihahMajlisGroup.add(member4.group);
+    fatihahPrayingMembers.push(member4);
+
+    // 4. October 1, 2026: Katb Al-Kitab & Khitbah Festival with Crowd
+    const festivalGroup = new THREE.Group();
+    festivalGroup.position.set(0, 0, -35); // Milestone 7
+    worldGroup.add(festivalGroup);
+
+    const plaza = createBox(18, 0.25, 16, MAT.pearlIvory);
+    plaza.position.y = 0.12;
+    festivalGroup.add(plaza);
+
+    const plazaBorder = createBox(18.5, 0.2, 16.5, MAT.goldShine);
+    plazaBorder.position.y = 0.08;
+    festivalGroup.add(plazaBorder);
+
+    const certTable = createBox(3.2, 0.9, 1.6, MAT.woodSofa);
+    certTable.position.set(0, 0.65, -3.5);
+    const quranStand = createBox(0.8, 0.5, 0.6, MAT.goldShine);
+    quranStand.position.set(0, 1.35, -3.5);
+    const marriageScroll = createBox(1.5, 0.08, 0.9, MAT.white);
+    marriageScroll.position.set(0, 1.15, -3.4);
+    festivalGroup.add(certTable, quranStand, marriageScroll);
+
+    function addFestiveLanternPole(x, z) {
+      const pole = createBox(0.3, 7, 0.3, MAT.goldDark);
+      pole.position.set(x, 3.5, z);
+      const arm = createBox(1.6, 0.2, 0.2, MAT.goldShine);
+      arm.position.set(x > 0 ? x - 0.7 : x + 0.7, 6.8, z);
+      const lantern = createBox(0.5, 0.8, 0.5, MAT.goldShine);
+      lantern.position.set(x > 0 ? x - 1.4 : x + 1.4, 6.2, z);
+      const light = new THREE.PointLight(0xD4AF37, 0.8, 12);
+      light.position.set(lantern.position.x, 6.0, z);
+      festivalGroup.add(pole, arm, lantern, light);
+    }
+    addFestiveLanternPole(-8.5, -6.5);
+    addFestiveLanternPole(8.5, -6.5);
+    addFestiveLanternPole(-8.5, 6.5);
+    addFestiveLanternPole(8.5, 6.5);
+
+    const festivalGuests = [];
+    const guestPalettes = [
+      { male: true, color: 0x3E5266 },
+      { male: true, color: 0x2A3E31 },
+      { male: false, color: 0x82495C },
+      { male: true, color: 0x4A4137 },
+      { male: false, color: 0x3E6B5C },
+      { male: true, color: 0x2C3540 },
+      { male: false, color: 0x946E3F },
+      { male: true, color: 0x5C3A48 },
+      { male: true, color: 0x384E59 },
+      { male: false, color: 0x546A4A },
+      { male: true, color: 0x6E4C33 },
+      { male: false, color: 0x7E3B52 }
+    ];
+
+    guestPalettes.forEach((cfg, idx) => {
+      const guest = createVoxelGuest(cfg.male, cfg.color);
+      const isRight = idx % 2 === 0;
+      const row = Math.floor(idx / 2);
+      const gx = isRight ? (5.5 + (row % 2) * 1.6) : (-5.5 - (row % 2) * 1.6);
+      const gz = -5.5 + row * 2.6;
+      guest.group.position.set(gx, 0.25, gz);
+      guest.group.lookAt(0, 1.2, 0);
+      festivalGroup.add(guest.group);
+      festivalGuests.push(guest);
+    });
+
+    // 5. Wedding Pavilion & Cozy Cottage (Milestone 8)
+    const weddingGroup = new THREE.Group();
+    weddingGroup.position.set(0, 0, -60);
+    worldGroup.add(weddingGroup);
+
+    const p1 = createBox(0.8, 6.5, 0.8, MAT.white);
+    p1.position.set(-4, 3.25, -2);
+    const p2 = createBox(0.8, 6.5, 0.8, MAT.white);
+    p2.position.set(4, 3.25, -2);
+    const archTop = createBox(9.5, 0.9, 1.2, MAT.white);
+    archTop.position.set(0, 6.7, -2);
+    const archTrim = createBox(9.7, 0.2, 1.3, MAT.goldShine);
+    archTrim.position.set(0, 7.2, -2);
+    weddingGroup.add(p1, p2, archTop, archTrim);
+
+    const houseGroup = new THREE.Group();
+    houseGroup.position.set(9, 0, -65);
+    worldGroup.add(houseGroup);
+
+    const houseBody = createBox(7, 5, 6, MAT.pearlIvory);
+    houseBody.position.y = 2.5;
+    const roof = createBox(7.8, 1.8, 6.8, MAT.woodSofa);
+    roof.position.y = 5.6;
+    const door = createBox(1.3, 2.6, 0.2, MAT.woodSofa);
+    door.position.set(-1.2, 1.3, 3.05);
+    const win = createBox(1.5, 1.5, 0.2, new THREE.MeshBasicMaterial({ color: 0xFFE082 }));
+    win.position.set(1.5, 2.8, 3.05);
+    houseGroup.add(houseBody, roof, door, win);
+
+    // 6. Crescent Moon (Milestone 10)
+    const crescentGroup = new THREE.Group();
+    crescentGroup.position.set(0, 18, -135);
+    scene.add(crescentGroup);
+
+    for (let y = -4; y <= 4; y += 0.8) {
+      const w = 4.2 - Math.abs(y) * 0.7;
+      const blk = createBox(w, 0.7, 0.6, MAT.goldShine);
+      blk.position.set(-w / 2 + 1.2, y, 0);
+      crescentGroup.add(blk);
+    }
+
+    const starCount = 350;
+    const starGeo = new THREE.BufferGeometry();
+    const starPos = new Float32Array(starCount * 3);
+    for (let i = 0; i < starCount * 3; i += 3) {
+      starPos[i] = (Math.random() - 0.5) * 160;
+      starPos[i + 1] = Math.random() * 45 + 5;
+      starPos[i + 2] = (Math.random() - 0.5) * 220 - 40;
+    }
+    starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+    const starMat = new THREE.PointsMaterial({ color: 0xD4AF37, size: 0.45, transparent: true, opacity: 0.7 });
+    scene.add(new THREE.Points(starGeo, starMat));
+
+    /* =========================================================================
+       3. TIMELINE MAPPING & KINEMATICS
+       ========================================================================= */
+    const MILESTONE_Z = [
+      90,   // 0: Hero
+      75,   // 1: Duaa / Beginning alone
+      55,   // 2: Aug 22, 2026 - First Date (Majlis 2 Sofas + Mothers)
+      38,   // 3: Aug 23, 2026 - Second Date (Sofas for both)
+      22,   // 4: Aug 25, 2026 - Areej Approves (Aref alone rejoicing)
+      5,    // 5: Fatihah (Aref seated on his own individual sofa + families seated)
+      -15,  // 6: Communication period without Katb Kitab (Aref walks alone)
+      -35,  // 7: Oct 1, 2026 - Katb Kitab & Khitbah Festival (AREEJ JOINS HERE!)
+      -60,  // 8: Wedding & Cozy House
+      -85,  // 9: Karam & Yasmine
+      -115  // 10: Finale to Jannah together
+    ];
+
+    let currentScrollProgress = 0;
+    let targetScrollProgress = 0;
+    let activeMilestoneIdx = 0;
+
+    function updateScroll() {
+      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+      targetScrollProgress = maxScroll > 0 ? (window.scrollY / maxScroll) : 0;
+      targetScrollProgress = Math.max(0, Math.min(1, targetScrollProgress));
+    }
+    window.addEventListener('scroll', updateScroll, { passive: true });
+
+    function lerp(a, b, t) {
+      return a + (b - a) * t;
+    }
+
+    let clock = new THREE.Clock();
+    let isInspecting = false;
+    let inspectAngle = 0;
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const time = clock.getElapsedTime();
+
+      currentScrollProgress = lerp(currentScrollProgress, targetScrollProgress, 0.08);
+
+      if (timelineFill) {
+        timelineFill.style.height = `${currentScrollProgress * 100}%`;
+      }
+
+      const totalSteps = MILESTONE_Z.length - 1;
+      const exactStep = currentScrollProgress * totalSteps;
+      activeMilestoneIdx = Math.round(exactStep);
+
+      storySections.forEach((sec, idx) => {
+        if (idx === activeMilestoneIdx) {
+          sec.classList.add('active');
+        } else {
+          sec.classList.remove('active');
+        }
+      });
+
+      const railDots = document.querySelectorAll('.rail-dot');
+      railDots.forEach((dot, idx) => {
+        if (idx === activeMilestoneIdx) {
+          dot.classList.add('active');
+        } else {
+          dot.classList.remove('active');
+        }
+      });
+
+      const stepIdx = Math.floor(exactStep);
+      const stepFraction = exactStep - stepIdx;
+      let currentZ = MILESTONE_Z[0];
+
+      if (stepIdx >= totalSteps) {
+        currentZ = MILESTONE_Z[totalSteps];
+      } else {
+        currentZ = lerp(MILESTONE_Z[stepIdx], MILESTONE_Z[stepIdx + 1], stepFraction);
+      }
+
+      const isAtFirstMeetingSofa = (exactStep >= 1.65 && exactStep <= 2.35);
+      const isAtSecondMeetingSofa = (exactStep >= 2.65 && exactStep <= 3.35);
+      const isAtFatihahSofa = (exactStep >= 4.65 && exactStep <= 5.35);
+      const isBeforeOct1Festival = (exactStep < 6.65);
+
+      const walkSpeed = 10;
+      const walkCycle = Math.sin(time * walkSpeed);
+
+      // 1. AREF (THE GROOM)
+      if (isAtFirstMeetingSofa) {
+        groomChar.group.position.set(3.2, 0.25, 55.4);
+        groomChar.group.rotation.set(0, -Math.PI / 2, 0);
+        groomChar.leftLegPivot.rotation.x = -Math.PI / 2;
+        groomChar.rightLegPivot.rotation.x = -Math.PI / 2;
+        groomChar.leftArmPivot.rotation.x = -0.3;
+        groomChar.rightArmPivot.rotation.x = -0.3;
+        groomChar.head.rotation.y = 0.25 * Math.sin(time * 1.5);
+      } else if (isAtSecondMeetingSofa) {
+        groomChar.group.position.set(2.8, 0.25, 38.3);
+        groomChar.group.rotation.set(0, -Math.PI / 2, 0);
+        groomChar.leftLegPivot.rotation.x = -Math.PI / 2;
+        groomChar.rightLegPivot.rotation.x = -Math.PI / 2;
+        groomChar.leftArmPivot.rotation.x = -0.35;
+        groomChar.rightArmPivot.rotation.x = -0.35;
+        groomChar.head.rotation.y = 0.2 * Math.sin(time * 1.2);
+      } else if (isAtFatihahSofa) {
+        // Seated on his individual sofa at Fatihah
+        groomChar.group.position.set(2.4, 0.25, 5 + 2.2);
+        groomChar.group.rotation.set(0, -Math.PI * 0.65, 0);
+        groomChar.leftLegPivot.rotation.x = -Math.PI / 2;
+        groomChar.rightLegPivot.rotation.x = -Math.PI / 2;
+        // Hands raised in sincere Du'a / Fatihah prayer
+        groomChar.leftArmPivot.rotation.x = -1.15 + 0.04 * Math.sin(time * 2);
+        groomChar.rightArmPivot.rotation.x = -1.15 - 0.04 * Math.sin(time * 2);
+        groomChar.head.rotation.y = 0.1 * Math.sin(time * 1.2);
+      } else {
+        groomChar.group.rotation.set(0, Math.PI, 0);
+        groomChar.leftLegPivot.rotation.x = walkCycle * 0.45;
+        groomChar.rightLegPivot.rotation.x = -walkCycle * 0.45;
+        groomChar.leftArmPivot.rotation.x = -walkCycle * 0.4;
+        groomChar.rightArmPivot.rotation.x = walkCycle * 0.4;
+        groomChar.head.rotation.set(0, 0, 0);
+
+        if (isBeforeOct1Festival) {
+          groomChar.group.position.set(0, 0.1, currentZ);
+        } else {
+          groomChar.group.position.set(0.95, 0.1, currentZ);
+        }
+      }
+
+      // 2. AREEJ (THE BRIDE)
+      if (isAtFirstMeetingSofa) {
+        brideChar.group.visible = true;
+        brideChar.group.position.set(-3.2, 0.25, 55.4);
+        brideChar.group.rotation.set(0, Math.PI / 2, 0);
+        brideChar.leftLegPivot.rotation.x = -Math.PI / 2;
+        brideChar.rightLegPivot.rotation.x = -Math.PI / 2;
+        brideChar.leftArmPivot.rotation.x = -0.25;
+        brideChar.rightArmPivot.rotation.x = -0.25;
+        brideChar.face.rotation.y = -0.25 * Math.sin(time * 1.5);
+      } else if (isAtSecondMeetingSofa) {
+        brideChar.group.visible = true;
+        brideChar.group.position.set(-2.8, 0.25, 38.3);
+        brideChar.group.rotation.set(0, Math.PI / 2, 0);
+        brideChar.leftLegPivot.rotation.x = -Math.PI / 2;
+        brideChar.rightLegPivot.rotation.x = -Math.PI / 2;
+        brideChar.leftArmPivot.rotation.x = -0.3;
+        brideChar.rightArmPivot.rotation.x = -0.3;
+        brideChar.face.rotation.y = -0.2 * Math.sin(time * 1.2);
+      } else if (isBeforeOct1Festival) {
+        brideChar.group.visible = false;
+      } else {
+        brideChar.group.visible = true;
+        brideChar.group.position.set(-0.95, 0.1, currentZ);
+        brideChar.group.rotation.set(0, Math.PI, 0);
+        brideChar.leftLegPivot.rotation.x = -walkCycle * 0.4;
+        brideChar.rightLegPivot.rotation.x = walkCycle * 0.4;
+        brideChar.leftArmPivot.rotation.x = walkCycle * 0.35;
+        brideChar.rightArmPivot.rotation.x = -walkCycle * 0.35;
+        brideChar.face.rotation.set(0, 0, 0);
+      }
+
+      // 3. MOTHERS IN FIRST MEETING SOFA (Aug 22)
+      if (isAtFirstMeetingSofa) {
+        motherGroom.group.visible = true;
+        motherGroom.group.position.set(3.2, 0.25, 54.2);
+        motherGroom.group.rotation.set(0, -Math.PI / 2, 0);
+        motherGroom.leftLegPivot.rotation.x = -Math.PI / 2;
+        motherGroom.rightLegPivot.rotation.x = -Math.PI / 2;
+
+        motherBride.group.visible = true;
+        motherBride.group.position.set(-3.2, 0.25, 54.2);
+        motherBride.group.rotation.set(0, Math.PI / 2, 0);
+        motherBride.leftLegPivot.rotation.x = -Math.PI / 2;
+        motherBride.rightLegPivot.rotation.x = -Math.PI / 2;
+      } else {
+        motherGroom.group.visible = false;
+        motherBride.group.visible = false;
+      }
+
+      // 4. ANIMATE PEOPLE ON FATIHAH SOFAS (يقرأون الفاتحة)
+      fatihahPrayingMembers.forEach((m, idx) => {
+        const prayerSway = Math.sin(time * 2 + idx);
+        m.leftArmPivot.rotation.x = -0.05 + prayerSway * 0.04;
+        m.rightArmPivot.rotation.x = -0.05 + prayerSway * 0.04;
+      });
+
+      // 5. FESTIVAL GUESTS CHEERING AT KATB AL-KITAB (Oct 1)
+      festivalGuests.forEach((g) => {
+        const cheer = Math.sin(time * 5 + g.cheerOffset);
+        g.leftArmPivot.rotation.x = 2.4 + cheer * 0.4;
+        g.rightArmPivot.rotation.x = 2.4 - cheer * 0.4;
+        g.leftArmPivot.rotation.z = Math.sin(time * 3 + g.cheerOffset) * 0.2;
+      });
+
+      // 6. CHILDREN JOINING
+      if (exactStep >= 8.6) {
+        child1Char.group.visible = true;
+        child1Char.group.position.set(0, 0.05, currentZ + 0.3);
+        child1Char.group.rotation.set(0, Math.PI, 0);
+        child1Char.leftLegPivot.rotation.x = walkCycle * 0.5;
+        child1Char.rightLegPivot.rotation.x = -walkCycle * 0.5;
+      } else {
+        child1Char.group.visible = false;
+      }
+
+      if (exactStep >= 9.3) {
+        child2Char.group.visible = true;
+        child1Char.group.position.set(0.4, 0.05, currentZ + 0.4);
+        child2Char.group.position.set(-0.4, 0.05, currentZ + 0.4);
+        child2Char.group.rotation.set(0, Math.PI, 0);
+        child2Char.leftLegPivot.rotation.x = -walkCycle * 0.5;
+        child2Char.rightLegPivot.rotation.x = walkCycle * 0.5;
+      } else {
+        child2Char.group.visible = false;
+      }
+
+      // 7. CAMERA CONTROLS
+      if (!isInspecting) {
+        let targetCamX = 0;
+        let targetCamY = 7.5;
+        let targetCamZ = currentZ + 18;
+        let lookAtY = 2.4;
+
+        if (isAtFirstMeetingSofa) {
+          targetCamX = 0;
+          targetCamY = 5.5;
+          targetCamZ = 65;
+          lookAtY = 1.8;
+        } else if (isAtSecondMeetingSofa) {
+          targetCamX = 0;
+          targetCamY = 5.4;
+          targetCamZ = 48;
+          lookAtY = 1.8;
+        } else if (isAtFatihahSofa) {
+          targetCamX = 0;
+          targetCamY = 6.2;
+          targetCamZ = 16.5;
+          lookAtY = 1.9;
+        } else if (exactStep >= 6.5 && exactStep <= 7.5) {
+          targetCamX = 2;
+          targetCamY = 10;
+          targetCamZ = currentZ + 20;
+          lookAtY = 2.0;
+        } else if (exactStep > 9.5) {
+          targetCamX = 0;
+          targetCamY = 9.5;
+          targetCamZ = currentZ + 24;
+          lookAtY = 4.0;
+        }
+
+        camera.position.x = lerp(camera.position.x, targetCamX, 0.06);
+        camera.position.y = lerp(camera.position.y, targetCamY, 0.06);
+        camera.position.z = lerp(camera.position.z, targetCamZ, 0.06);
+        camera.lookAt(0, lookAtY, currentZ - 2);
+      } else {
+        inspectAngle += 0.008;
+        camera.position.x = Math.sin(inspectAngle) * 22;
+        camera.position.z = currentZ + Math.cos(inspectAngle) * 22;
+        camera.position.y = 8;
+        camera.lookAt(0, 2, currentZ);
+      }
+
+      renderer.render(scene, camera);
+    }
+
+    // Safe Loader Dismissal
+    function hideLoader() {
+      const loader = document.getElementById('loader-screen');
+      if (loader) {
+        loader.classList.add('hidden');
+      }
+    }
+    setTimeout(hideLoader, 500);
+    window.addEventListener('load', hideLoader);
+
+    animate();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    /* =========================================================================
+       4. SOUND SYNTHESIZER (WEB AUDIO API)
+       ========================================================================= */
+    let audioCtx = null;
+    let isPlaying = false;
+    let audioTimer = null;
+
+    const SCALE = [220.00, 247.50, 261.63, 293.66, 329.63, 348.00, 392.00, 440.00, 523.25];
+
+    function playNote(freq, duration = 1.6, gainLevel = 0.08) {
+      if (!audioCtx) return;
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(gainLevel, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {
+        console.warn(e);
+      }
+    }
+
+    function startMusic() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      isPlaying = true;
+      audioBtn.classList.add('active');
+      audioText.innerText = "إيقاف النغم";
+
+      let noteIndex = 0;
+      audioTimer = setInterval(() => {
+        const freq = SCALE[noteIndex % SCALE.length];
+        playNote(freq, 2.2, 0.07);
+        if (noteIndex % 3 === 0) {
+          playNote(freq * 0.5, 3.5, 0.05);
+        }
+        noteIndex = (noteIndex + Math.floor(Math.random() * 3) + 1) % SCALE.length;
+      }, 750);
+    }
+
+    function stopMusic() {
+      isPlaying = false;
+      audioBtn.classList.remove('active');
+      audioText.innerText = "تشغيل النغم";
+      if (audioTimer) clearInterval(audioTimer);
+    }
+
+    audioBtn.addEventListener('click', () => {
+      if (isPlaying) stopMusic();
+      else startMusic();
+    });
+
+    /* =========================================================================
+       5. USER INTERFACE & MODAL INTERACTIONS
+       ========================================================================= */
+    inspectBtn.addEventListener('click', () => {
+      isInspecting = !isInspecting;
+      inspectBtn.classList.toggle('active', isInspecting);
+      container.classList.toggle('interactive', isInspecting);
+    });
+
+    customizeBtn.addEventListener('click', () => {
+      customizeModal.classList.add('open');
+    });
+
+    function closeModal() {
+      customizeModal.classList.remove('open');
+    }
+    closeModalBtn.addEventListener('click', closeModal);
+    cancelModalBtn.addEventListener('click', closeModal);
+
+    saveModalBtn.addEventListener('click', () => {
+      const gName = document.getElementById('input-groom').value.trim() || "عارف";
+      const bName = document.getElementById('input-bride').value.trim() || "أريج";
+      const c1Name = document.getElementById('input-child1').value.trim() || "كرم";
+      const c2Name = document.getElementById('input-child2').value.trim() || "ياسمين";
+
+      STORY_DATA.groom = gName;
+      STORY_DATA.bride = bName;
+      STORY_DATA.child1 = c1Name;
+      STORY_DATA.child2 = c2Name;
+
+      document.getElementById('nav-brand-text').innerText = `${gName} & ${bName}`;
+      document.getElementById('hero-groom').innerText = gName;
+      document.getElementById('hero-bride').innerText = bName;
+
+      closeModal();
+    });
+
+    promiseActionBtn.addEventListener('click', () => {
+      if (window.confetti) {
+        confetti({
+          particleCount: 90,
+          spread: 75,
+          origin: { y: 0.7 },
+          colors: ['#D4AF37', '#FFFDF9', '#B38F26', '#E6C665']
+        });
+      }
+
+      promiseActionBtn.innerHTML = "<span>مباركٌ لكما وعقدٌ ميمون جامع على الخير ❤️</span>";
+      promiseActionBtn.style.background = "linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%)";
+
+      if (audioCtx) {
+        [523.25, 659.25, 783.99, 1046.50].forEach((f, i) => {
+          setTimeout(() => playNote(f, 2.0, 0.1), i * 140);
+        });
+      }
+    });
+  </script>
+</body>
+</html>
